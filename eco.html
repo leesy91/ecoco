@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>지구 환경 지키기 게임</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to bottom, #e0f7fa, #b2ebf2);
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    
+    .game-container {
+      width: 100%;
+      max-width: 500px;
+    }
+    
+    .game-title {
+      text-align: center;
+      color: #00796b;
+      margin-bottom: 20px;
+    }
+    
+    .game-stats {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      padding: 10px;
+      background-color: rgba(255, 255, 255, 0.7);
+      border-radius: 10px;
+    }
+    
+    .stat {
+      font-weight: bold;
+    }
+    
+    .score { color: #2e7d32; }
+    .level { color: #1565c0; }
+    .time { color: #c62828; }
+    
+    .game-area {
+      height: 400px;
+      background-color: #e8f5e9;
+      border: 3px solid #4caf50;
+      border-radius: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .start-screen, .end-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      text-align: center;
+      padding: 20px;
+    }
+    
+    .start-screen p, .end-screen p {
+      margin-bottom: 20px;
+      line-height: 1.5;
+      color: #37474f;
+    }
+    
+    .item {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 10px;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    
+    .item:hover {
+      transform: scale(1.1);
+    }
+    
+    .item-name {
+      font-size: 10px;
+      margin-top: 2px;
+    }
+    
+    .trash { background-color: rgba(244, 67, 54, 0.2); }
+    .recycle { background-color: rgba(76, 175, 80, 0.2); }
+    .wind { background-color: rgba(33, 150, 243, 0.2); }
+    .water { background-color: rgba(3, 169, 244, 0.2); }
+    .solar { background-color: rgba(255, 193, 7, 0.2); }
+    
+    button {
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    
+    button:hover {
+      background-color: #2e7d32;
+    }
+    
+    .instructions {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: rgba(255, 255, 255, 0.7);
+      border-radius: 10px;
+    }
+    
+    .instructions h3 {
+      margin-top: 0;
+      color: #37474f;
+    }
+    
+    .instructions ul {
+      padding-left: 20px;
+      margin-bottom: 0;
+    }
+    
+    .instructions li {
+      margin-bottom: 5px;
+      color: #455a64;
+      list-style-type: none;
+    }
+    
+    .icon {
+      width: 24px;
+      height: 24px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .trophy {
+      font-size: 40px;
+      color: #ffc107;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <h1 class="game-title">지구 환경 지키기</h1>
+    
+    <div id="gameStats" class="game-stats" style="display: none;">
+      <div class="stat score">점수: <span id="scoreValue">0</span></div>
+      <div class="stat level">레벨: <span id="levelValue">1</span></div>
+      <div class="stat time">시간: <span id="timeValue">60</span>초</div>
+    </div>
+    
+    <div id="gameArea" class="game-area">
+      <!-- 시작 화면 -->
+      <div id="startScreen" class="start-screen">
+        <p>
+          환경을 지키기 위한 행동을 하세요!<br>
+          재활용품, 풍력, 물 절약, 태양열은 클릭하고,<br>
+          쓰레기는 바닥에 떨어지게 두세요.
+        </p>
+        <button id="startButton">게임 시작하기</button>
+      </div>
+      
+      <!-- 게임 끝 화면 -->
+      <div id="endScreen" class="end-screen" style="display: none;">
+        <div class="trophy">🏆</div>
+        <h2>게임 종료!</h2>
+        <p>최종 점수: <span id="finalScore" class="score">0</span></p>
+        <p>달성 레벨: <span id="finalLevel" class="level">1</span></p>
+        <button id="restartButton">다시 시작하기</button>
+      </div>
+    </div>
+    
+    <div id="instructions" class="instructions" style="display: none;">
+      <h3>게임 설명:</h3>
+      <ul>
+        <li>♻️ 재활용품: 클릭하면 +10점</li>
+        <li>💨 풍력: 클릭하면 +8점</li>
+        <li>💧 물 절약: 클릭하면 +5점</li>
+        <li>☀️ 태양열: 클릭하면 +15점</li>
+        <li>🗑️ 쓰레기: 클릭하면 -5점, 바닥에 떨어지면 +5점</li>
+      </ul>
+    </div>
+  </div>
+  
+  <script>
+    // 게임 상태 변수
+    let score = 0;
+    let time = 60;
+    let level = 1;
+    let gameActive = false;
+    let items = [];
+    let timerId;
+    let moveTimerId;
+    
+    // 아이템 유형
+    const itemTypes = [
+      { type: 'trash', icon: '🗑️', points: -5, name: '쓰레기', class: 'trash' },
+      { type: 'recycle', icon: '♻️', points: 10, name: '재활용품', class: 'recycle' },
+      { type: 'wind', icon: '💨', points: 8, name: '풍력', class: 'wind' },
+      { type: 'water', icon: '💧', points: 5, name: '물 절약', class: 'water' },
+      { type: 'solar', icon: '☀️', points: 15, name: '태양열', class: 'solar' }
+    ];
+    
+    // DOM 요소
+    const gameArea = document.getElementById('gameArea');
+    const startScreen = document.getElementById('startScreen');
+    const endScreen = document.getElementById('endScreen');
+    const gameStats = document.getElementById('gameStats');
+    const instructions = document.getElementById('instructions');
+    const scoreValue = document.getElementById('scoreValue');
+    const levelValue = document.getElementById('levelValue');
+    const timeValue = document.getElementById('timeValue');
+    const finalScore = document.getElementById('finalScore');
+    const finalLevel = document.getElementById('finalLevel');
+    const startButton = document.getElementById('startButton');
+    const restartButton = document.getElementById('restartButton');
+    
+    // 게임 시작
+    function startGame() {
+      gameActive = true;
+      score = 0;
+      time = 60;
+      level = 1;
+      items = [];
+      
+      // 화면 초기화
+      startScreen.style.display = 'none';
+      endScreen.style.display = 'none';
+      gameStats.style.display = 'flex';
+      instructions.style.display = 'block';
+      updateStats();
+      
+      // 타이머 시작
+      startTimer();
+      
+      // 첫 아이템 생성
+      createItem();
+      
+      // 아이템 이동 시작
+      startMovingItems();
+    }
+    
+    // 게임 종료
+    function endGame() {
+      gameActive = false;
+      clearInterval(timerId);
+      clearInterval(moveTimerId);
+      
+      // 모든 아이템 제거
+      removeAllItems();
+      
+      // 결과 표시
+      finalScore.textContent = score;
+      finalLevel.textContent = level;
+      endScreen.style.display = 'flex';
+    }
+    
+    // 타이머 시작
+    function startTimer() {
+      timerId = setInterval(() => {
+        time--;
+        updateStats();
+        
+        if (time <= 0) {
+          endGame();
+        }
+      }, 1000);
+    }
+    
+    // 통계 업데이트
+    function updateStats() {
+      scoreValue.textContent = score;
+      levelValue.textContent = level;
+      timeValue.textContent = time;
+    }
+    
+    // 아이템 생성
+    function createItem() {
+      if (!gameActive) return;
+      
+      const randomType = itemTypes[Math.floor(Math.random() * itemTypes.length)];
+      const leftPosition = Math.floor(Math.random() * 80) + 10; // 10% ~ 90%
+      
+      // 아이템 엘리먼트 생성
+      const itemElement = document.createElement('div');
+      itemElement.className = `item ${randomType.class}`;
+      itemElement.style.left = `${leftPosition}%`;
+      itemElement.style.top = '-50px';
+      
+      const itemId = Date.now() + Math.random();
+      itemElement.dataset.id = itemId;
+      
+      // 아이콘과 이름 추가
+      itemElement.innerHTML = `
+        <div class="icon">${randomType.icon}</div>
+        <div class="item-name">${randomType.name}</div>
+      `;
+      
+      // 클릭 이벤트 추가
+      itemElement.addEventListener('click', () => {
+        handleItemClick(itemId, randomType.points);
+        gameArea.removeChild(itemElement);
+      });
+      
+      // 게임 영역에 추가
+      gameArea.appendChild(itemElement);
+      
+      // 아이템 객체 생성
+      const newItem = {
+        id: itemId,
+        element: itemElement,
+        points: randomType.points,
+        type: randomType.type,
+        speed: 1 + Math.random() * (level * 0.5)
+      };
+      
+      items.push(newItem);
+      
+      // 다음 아이템 생성 예약
+      const timeoutDelay = Math.max(500, 2000 - level * 200);
+      setTimeout(() => {
+        if (gameActive) createItem();
+      }, timeoutDelay);
+    }
+    
+    // 아이템 클릭 처리
+    function handleItemClick(id, points) {
+      score += points;
+      updateStats();
+      
+      // 아이템 목록에서 제거
+      items = items.filter(item => item.id !== id);
+      
+      // 10점마다 레벨업
+      if (score > 0 && score % 50 === 0) {
+        level++;
+        updateStats();
+      }
+    }
+    
+    // 아이템 이동 시작
+    function startMovingItems() {
+      moveTimerId = setInterval(() => {
+        if (!gameActive) return;
+        
+        // 각 아이템 이동
+        items.forEach((item, index) => {
+          const element = item.element;
+          const currentTop = parseFloat(element.style.top);
+          const newTop = currentTop + item.speed;
+          element.style.top = `${newTop}px`;
+          
+          // 바닥에 닿았는지 확인
+          const gameAreaHeight = gameArea.offsetHeight;
+          if (newTop > gameAreaHeight - 50) {
+            // 아이템이 바닥에 닿았을 때
+            gameArea.removeChild(element);
+            
+            // 쓰레기가 바닥에 닿으면 점수 증가
+            if (item.type === 'trash') {
+              score += Math.abs(item.points);
+            } 
+            // 다른 아이템이 바닥에 닿으면 점수 감소
+            else {
+              score -= Math.abs(item.points);
+            }
+            updateStats();
+            
+            // 아이템 목록에서 제거
+            items.splice(index, 1);
+          }
+        });
+      }, 50);
+    }
+    
+    // 모든 아이템 제거
+    function removeAllItems() {
+      items.forEach(item => {
+        if (item.element.parentNode === gameArea) {
+          gameArea.removeChild(item.element);
+        }
+      });
+      items = [];
+    }
+    
+    // 이벤트 리스너
+    startButton.addEventListener('click', startGame);
+    restartButton.addEventListener('click', startGame);
+  </script>
+</body>
+</html>
